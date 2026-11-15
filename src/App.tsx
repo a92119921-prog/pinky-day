@@ -1,11 +1,13 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 type EventItem = {
   id: number;
   date: string;
   title: string;
   category: string;
+  time?: string;
+  reminder?: boolean;
 };
 
 const categories = [
@@ -18,11 +20,11 @@ const categories = [
 
 export default function App() {
   const today = new Date();
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
   const [month, setMonth] = useState(today.getMonth());
   const [year, setYear] = useState(today.getFullYear());
-  const [selectedDate, setSelectedDate] = useState(
-    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  );
+  const [selectedDate, setSelectedDate] = useState(todayKey);
 
   const [events, setEvents] = useState<EventItem[]>(() => {
     try {
@@ -36,11 +38,45 @@ export default function App() {
   const [newTitle, setNewTitle] = useState('');
   const [newTodo, setNewTodo] = useState('');
   const [newCategory, setNewCategory] = useState('生活');
+  const [newTime, setNewTime] = useState('09:00');
+  const [newReminder, setNewReminder] = useState(true);
+  const [notifiedIds, setNotifiedIds] = useState<number[]>([]);
 
   const saveEvents = (items: EventItem[]) => {
     setEvents(items);
     localStorage.setItem('pinky-events', JSON.stringify(items));
   };
+
+  // 行程到時間時提醒（APP 開啟期間）
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+
+      const currentDate =
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+      const currentTime =
+        `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      events.forEach(event => {
+        if (
+          event.reminder &&
+          event.time &&
+          event.date === currentDate &&
+          event.time === currentTime &&
+          !notifiedIds.includes(event.id)
+        ) {
+          setNotifiedIds(previous => [...previous, event.id]);
+          window.alert(`🎀 Pinky Day 行程提醒\n\n${event.title}\n時間：${event.time}`);
+        }
+      });
+    };
+
+    checkReminders();
+    const timer = window.setInterval(checkReminders, 10000);
+
+    return () => window.clearInterval(timer);
+  }, [events, notifiedIds]);
 
   const days = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
@@ -49,7 +85,10 @@ export default function App() {
     `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
   const addEvent = () => {
-    if (!newTitle.trim()) return;
+    if (!newTitle.trim()) {
+      window.alert('請先輸入行程名稱喔！');
+      return;
+    }
 
     saveEvents([
       ...events,
@@ -58,11 +97,15 @@ export default function App() {
         date: selectedDate,
         title: newTitle.trim(),
         category: newCategory,
+        time: newTime,
+        reminder: newReminder,
       },
     ]);
 
     setNewTitle('');
     setNewCategory('生活');
+    setNewTime('09:00');
+    setNewReminder(true);
   };
 
   const monthChange = (amount: number) => {
@@ -71,9 +114,9 @@ export default function App() {
     setMonth(next.getMonth());
   };
 
-  const selectedEvents = events.filter(
-    item => item.date === selectedDate
-  );
+  const selectedEvents = events
+    .filter(item => item.date === selectedDate)
+    .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
   return (
     <main className="app">
@@ -154,6 +197,26 @@ export default function App() {
           </div>
         </div>
 
+        <div className="reminder-settings">
+          <label className="time-label">
+            <span>🕒 行程時間</span>
+            <input
+              type="time"
+              value={newTime}
+              onChange={e => setNewTime(e.target.value)}
+            />
+          </label>
+
+          <label className="reminder-toggle">
+            <input
+              type="checkbox"
+              checked={newReminder}
+              onChange={e => setNewReminder(e.target.checked)}
+            />
+            <span>🔔 開啟行程提醒</span>
+          </label>
+        </div>
+
         {selectedEvents.length === 0 ? (
           <p className="empty">
             今天還沒有行程，留一點時間給自己吧 ♡
@@ -170,8 +233,11 @@ export default function App() {
                   <span>{item.title}</span>
                   <small>
                     {category.icon} {category.name}
+                    {item.time ? ` · 🕒 ${item.time}` : ''}
+                    {item.reminder ? ' · 🔔' : ''}
                   </small>
                 </div>
+
                 <button
                   onClick={() =>
                     saveEvents(events.filter(e => e.id !== item.id))
