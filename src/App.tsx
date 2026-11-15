@@ -8,11 +8,22 @@ type EventItem = {
   category: string;
 };
 
+const categories = [
+  { name: '生活', icon: '🌸', color: 'life' },
+  { name: '工作', icon: '💼', color: 'work' },
+  { name: '約會', icon: '💗', color: 'date' },
+  { name: '購物', icon: '🛍️', color: 'shopping' },
+  { name: '生日', icon: '🎂', color: 'birthday' },
+];
+
 export default function App() {
   const today = new Date();
   const [month, setMonth] = useState(today.getMonth());
   const [year, setYear] = useState(today.getFullYear());
-  const [selectedDate, setSelectedDate] = useState(today.toISOString().slice(0, 10));
+  const [selectedDate, setSelectedDate] = useState(
+    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  );
+
   const [events, setEvents] = useState<EventItem[]>(() => {
     try {
       return JSON.parse(localStorage.getItem('pinky-events') || '[]');
@@ -20,9 +31,11 @@ export default function App() {
       return [];
     }
   });
+
   const [todos, setTodos] = useState<string[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [newTodo, setNewTodo] = useState('');
+  const [newCategory, setNewCategory] = useState('生活');
 
   const saveEvents = (items: EventItem[]) => {
     setEvents(items);
@@ -31,21 +44,25 @@ export default function App() {
 
   const days = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
+
   const dateKey = (day: number) =>
     `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
   const addEvent = () => {
     if (!newTitle.trim()) return;
+
     saveEvents([
       ...events,
       {
         id: Date.now(),
         date: selectedDate,
         title: newTitle.trim(),
-        category: '生活'
-      }
+        category: newCategory,
+      },
     ]);
+
     setNewTitle('');
+    setNewCategory('生活');
   };
 
   const monthChange = (amount: number) => {
@@ -54,7 +71,9 @@ export default function App() {
     setMonth(next.getMonth());
   };
 
-  const selectedEvents = events.filter(item => item.date === selectedDate);
+  const selectedEvents = events.filter(
+    item => item.date === selectedDate
+  );
 
   return (
     <main className="app">
@@ -84,11 +103,13 @@ export default function App() {
           {Array.from({ length: firstDay }, (_, i) => (
             <span key={`empty-${i}`} />
           ))}
+
           {Array.from({ length: days }, (_, i) => {
             const day = i + 1;
             const key = dateKey(day);
             const active = selectedDate === key;
             const hasEvent = events.some(item => item.date === key);
+
             return (
               <button
                 key={day}
@@ -105,27 +126,68 @@ export default function App() {
 
       <section className="card">
         <h2>🌷 {selectedDate} 的行程</h2>
+
         <div className="add-row">
           <input
             value={newTitle}
             onChange={e => setNewTitle(e.target.value)}
             placeholder="今天想安排什麼呢？"
           />
-          <button className="pink-button" onClick={addEvent}>新增</button>
+          <button className="pink-button" onClick={addEvent}>
+            新增
+          </button>
+        </div>
+
+        <div className="category-picker">
+          <p>選擇行程分類</p>
+          <div className="category-options">
+            {categories.map(category => (
+              <button
+                key={category.name}
+                type="button"
+                className={`category-option ${category.color} ${newCategory === category.name ? 'chosen' : ''}`}
+                onClick={() => setNewCategory(category.name)}
+              >
+                {category.icon} {category.name}
+              </button>
+            ))}
+          </div>
         </div>
 
         {selectedEvents.length === 0 ? (
-          <p className="empty">今天還沒有行程，留一點時間給自己吧 ♡</p>
-        ) : selectedEvents.map(item => (
-          <div className="event" key={item.id}>
-            <span>🌸 {item.title}</span>
-            <button onClick={() => saveEvents(events.filter(e => e.id !== item.id))}>刪除</button>
-          </div>
-        ))}
+          <p className="empty">
+            今天還沒有行程，留一點時間給自己吧 ♡
+          </p>
+        ) : (
+          selectedEvents.map(item => {
+            const category = categories.find(
+              c => c.name === item.category
+            ) || categories[0];
+
+            return (
+              <div className={`event ${category.color}`} key={item.id}>
+                <div className="event-info">
+                  <span>{item.title}</span>
+                  <small>
+                    {category.icon} {category.name}
+                  </small>
+                </div>
+                <button
+                  onClick={() =>
+                    saveEvents(events.filter(e => e.id !== item.id))
+                  }
+                >
+                  刪除
+                </button>
+              </div>
+            );
+          })
+        )}
       </section>
 
       <section className="card">
         <h2>✨ 今日待辦</h2>
+
         <div className="add-row">
           <input
             value={newTodo}
@@ -140,18 +202,28 @@ export default function App() {
                 setNewTodo('');
               }
             }}
-          >新增</button>
+          >
+            新增
+          </button>
         </div>
+
         {todos.map((todo, index) => (
           <label className="todo" key={`${todo}-${index}`}>
             <input
               type="checkbox"
-              onChange={() => setTodos(todos.filter((_, i) => i !== index))}
+              onChange={() =>
+                setTodos(todos.filter((_, i) => i !== index))
+              }
             />
             {todo}
           </label>
         ))}
-        {todos.length === 0 && <p className="empty">完成一件小事，也值得給自己一個愛心 ♡</p>}
+
+        {todos.length === 0 && (
+          <p className="empty">
+            完成一件小事，也值得給自己一個愛心 ♡
+          </p>
+        )}
       </section>
 
       <footer>Made with ♡ Pinky Day 粉日常</footer>
