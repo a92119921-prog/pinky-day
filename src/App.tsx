@@ -1,8 +1,12 @@
 
 import { useEffect, useState } from 'react';
+import type { FormEvent } from 'react';
+import type { User } from '@supabase/supabase-js';
+import { supabase } from './supabase';
 
 type EventItem = {
-  id: number;
+  id: string;
+  user_id: string;
   date: string;
   title: string;
   category: string;
@@ -23,64 +27,137 @@ export default function App() {
   const todayKey =
     `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authMessage, setAuthMessage] = useState('');
+  const [authBusy, setAuthBusy] = useState(false);
+
   const [month, setMonth] = useState(today.getMonth());
   const [year, setYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState(todayKey);
-
-  const [events, setEvents] = useState<EventItem[]>(() => {
-    try {
-      return JSON.parse(localStorage.getItem('pinky-events') || '[]');
-    } catch {
-      return [];
-    }
-  });
-
+  const [events, setEvents] = useState<EventItem[]>([]);
   const [todos, setTodos] = useState<string[]>([]);
   const [newTitle, setNewTitle] = useState('');
   const [newTodo, setNewTodo] = useState('');
   const [newCategory, setNewCategory] = useState('生活');
   const [newTime, setNewTime] = useState('09:00');
   const [newReminder, setNewReminder] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
-  const saveEvents = (items: EventItem[]) => {
-    setEvents(items);
-    localStorage.setItem('pinky-events', JSON.stringify(items));
-  };
-
+  // 確認目前登入狀態
   useEffect(() => {
-    const checkReminders = () => {
-      const now = new Date();
+    supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        setAuthMessage(error.message);
+      }
+      setUser(data.session?.user ?? null);
+      setAuthLoading(false);
+    });
 
-      const currentDate =
-        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
 
-      const currentTime =
-        `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+    return () => subscription.unsubscribe();
+  }, []);
 
-      events.forEach(event => {
-        const notified = localStorage.getItem(`pinky-notified-${event.id}`);
+  // 登入後讀取這位會員自己的雲端行程
+  useEffect(() => {
+    if (!user) {
+      setEvents([]);
+      return;
+    }
 
-        if (
-          event.reminder &&
-          event.time &&
-          event.date === currentDate &&
-          event.time === currentTime &&
-          !notified
-        ) {
-          localStorage.setItem(`pinky-notified-${event.id}`, 'yes');
-          window.alert(
-            `🎀 Pinky Day 行程提醒\n\n${event.title}\n時間：${event.time}`
-          );
-        }
-      });
+    let active = true;
+
+    const loadEvents = async () => {
+      setEventsLoading(true);
+
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('date', { ascending: true });
+
+      if (!active) return;
+
+      if (error) {
+        window.alert('讀取行程失敗：' + error.message);
+      } else {
+        setEvents((data || []) as EventItem[]);
+      }
+
+      setEventsLoading(false);
     };
 
-    checkReminders();
-    const timer = window.setInterval(checkReminders, 10000);
+    loadEvents();
 
-    return () => window.clearInterval(timer);
-  }, [events]);
+    return () => {
+      active = false;
+    };
+  }, [user]);
+
+  const handleAuth = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setAuthMessage('');
+
+    if (!email.trim() || !password) {
+      setAuthMessage('請輸入電子郵件和密碼喔！');
+      return;
+    }
+
+    if (password.length < 6) {
+      setAuthMessage('密碼至少需要 6 個字元。');
+      return;
+    }
+
+    setAuthBusy(true);
+
+    if (authMode === 'signup') {
+      const { data, error } = await supabase.auth.signUp({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        setAuthMessage(error.message);
+      } else if (data.session) {
+        setAuthMessage('註冊成功！歡迎加入 Pinky Day 🎀');
+      } else {
+        setAuthMessage('註冊成功！請到電子郵件收取驗證信，完成驗證後再登入。');
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+
+      if (error) {
+        setAuthMessage('登入失敗：' + error.message);
+      } else {
+        setAuthMessage('登入成功！歡迎回來 ❤️');
+      }
+    }
+
+    setAuthBusy(false);
+  };
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      window.alert('登出失敗：' + error.message);
+    } else {
+      setEditingId(null);
+      resetForm();
+    }
+  };
 
   const days = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
@@ -96,39 +173,55 @@ export default function App() {
     setEditingId(null);
   };
 
-  const saveEvent = () => {
+  const saveEvent = async () => {
+    if (!user) return;
+
     if (!newTitle.trim()) {
       window.alert('請先輸入行程名稱喔！');
       return;
     }
 
-    if (editingId !== null) {
-      const updated = events.map(item =>
-        item.id === editingId
-          ? {
-              ...item,
-              title: newTitle.trim(),
-              date: selectedDate,
-              category: newCategory,
-              time: newTime,
-              reminder: newReminder,
-            }
-          : item
-      );
+    const eventData = {
+      user_id: user.id,
+      title: newTitle.trim(),
+      date: selectedDate,
+      category: newCategory,
+      time: newTime,
+      reminder: newReminder,
+    };
 
-      saveEvents(updated);
+    if (editingId !== null) {
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .update(eventData)
+        .eq('id', editingId)
+        .eq('user_id', user.id)
+        .select()
+        .single();
+
+      if (error) {
+        window.alert('修改失敗：' + error.message);
+        return;
+      }
+
+      setEvents(items =>
+        items.map(item =>
+          item.id === editingId ? (data as EventItem) : item
+        )
+      );
     } else {
-      saveEvents([
-        ...events,
-        {
-          id: Date.now(),
-          date: selectedDate,
-          title: newTitle.trim(),
-          category: newCategory,
-          time: newTime,
-          reminder: newReminder,
-        },
-      ]);
+      const { data, error } = await supabase
+        .from('calendar_events')
+        .insert(eventData)
+        .select()
+        .single();
+
+      if (error) {
+        window.alert('新增失敗：' + error.message);
+        return;
+      }
+
+      setEvents(items => [...items, data as EventItem]);
     }
 
     resetForm();
@@ -149,8 +242,22 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const deleteEvent = (id: number) => {
-    saveEvents(events.filter(item => item.id !== id));
+  const deleteEvent = async (id: string) => {
+    if (!user) return;
+    if (!window.confirm('確定要刪除這個行程嗎？')) return;
+
+    const { error } = await supabase
+      .from('calendar_events')
+      .delete()
+      .eq('id', id)
+      .eq('user_id', user.id);
+
+    if (error) {
+      window.alert('刪除失敗：' + error.message);
+      return;
+    }
+
+    setEvents(items => items.filter(item => item.id !== id));
 
     if (editingId === id) {
       resetForm();
@@ -169,6 +276,142 @@ export default function App() {
     .filter(item => item.date === selectedDate)
     .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
 
+  // 提醒：只有在網頁開啟時檢查
+  useEffect(() => {
+    if (!user) return;
+
+    const checkReminders = () => {
+      const now = new Date();
+
+      const currentDate =
+        `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+      const currentTime =
+        `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      events.forEach(event => {
+        const notified = localStorage.getItem(
+          `pinky-notified-${event.id}`
+        );
+
+        if (
+          event.reminder &&
+          event.time &&
+          event.date === currentDate &&
+          event.time === currentTime &&
+          !notified
+        ) {
+          localStorage.setItem(
+            `pinky-notified-${event.id}`,
+            'yes'
+          );
+
+          window.alert(
+            `🎀 Pinky Day 行程提醒\n\n${event.title}\n時間：${event.time}`
+          );
+        }
+      });
+    };
+
+    checkReminders();
+    const timer = window.setInterval(checkReminders, 10000);
+
+    return () => window.clearInterval(timer);
+  }, [events, user]);
+
+  // 尚未登入：顯示會員登入頁
+  if (authLoading) {
+    return (
+      <main className="app">
+        <section className="card">
+          <h1>🎀 Pinky Day</h1>
+          <p>正在準備你的小日常……</p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!user) {
+    return (
+      <main className="app">
+        <header className="top">
+          <div>
+            <span className="small-title">MY LITTLE WORLD</span>
+            <h1>🎀 Pinky Day</h1>
+            <p>把每一天，過成喜歡的樣子。</p>
+          </div>
+          <span className="heart">♡</span>
+        </header>
+
+        <section className="card">
+          <h2>
+            {authMode === 'login' ? '💗 會員登入' : '🌸 建立新帳號'}
+          </h2>
+
+          <form onSubmit={handleAuth}>
+            <label className="time-label">
+              <span>📧 電子郵件</span>
+              <input
+                type="email"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="請輸入電子郵件"
+                required
+              />
+            </label>
+
+            <label className="time-label">
+              <span>🔒 密碼（至少 6 個字元）</span>
+              <input
+                type="password"
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder="請輸入密碼"
+                minLength={6}
+                required
+              />
+            </label>
+
+            <button
+              className="pink-button"
+              type="submit"
+              disabled={authBusy}
+              style={{ width: '100%', marginTop: 16, padding: 12 }}
+            >
+              {authBusy
+                ? '請稍候……'
+                : authMode === 'login'
+                  ? '登入 Pinky Day'
+                  : '註冊新帳號'}
+            </button>
+          </form>
+
+          {authMessage && (
+            <p className="empty">{authMessage}</p>
+          )}
+
+          <p className="empty">
+            {authMode === 'login'
+              ? '還沒有帳號嗎？'
+              : '已經有帳號了嗎？'}
+          </p>
+
+          <button
+            type="button"
+            onClick={() => {
+              setAuthMode(authMode === 'login' ? 'signup' : 'login');
+              setAuthMessage('');
+            }}
+          >
+            {authMode === 'login' ? '立即註冊 ♡' : '返回登入'}
+          </button>
+        </section>
+
+        <footer>Made with ♡ Pinky Day 粉日常</footer>
+      </main>
+    );
+  }
+
   return (
     <main className="app">
       <header className="top">
@@ -176,9 +419,17 @@ export default function App() {
           <span className="small-title">MY LITTLE WORLD</span>
           <h1>🎀 Pinky Day</h1>
           <p>把每一天，過成喜歡的樣子。</p>
+          <small>{user.email}</small>
         </div>
         <span className="heart">♡</span>
       </header>
+
+      <section className="card">
+        <button type="button" onClick={handleLogout}>
+          登出會員
+        </button>
+        {eventsLoading && <p>正在讀取雲端行程……</p>}
+      </section>
 
       <section className="calendar card">
         <div className="month-bar">
