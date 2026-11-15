@@ -20,7 +20,8 @@ const categories = [
 
 export default function App() {
   const today = new Date();
-  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  const todayKey =
+    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
   const [month, setMonth] = useState(today.getMonth());
   const [year, setYear] = useState(today.getFullYear());
@@ -40,14 +41,13 @@ export default function App() {
   const [newCategory, setNewCategory] = useState('生活');
   const [newTime, setNewTime] = useState('09:00');
   const [newReminder, setNewReminder] = useState(true);
-  const [notifiedIds, setNotifiedIds] = useState<number[]>([]);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const saveEvents = (items: EventItem[]) => {
     setEvents(items);
     localStorage.setItem('pinky-events', JSON.stringify(items));
   };
 
-  // 行程到時間時提醒（APP 開啟期間）
   useEffect(() => {
     const checkReminders = () => {
       const now = new Date();
@@ -59,15 +59,19 @@ export default function App() {
         `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
       events.forEach(event => {
+        const notified = localStorage.getItem(`pinky-notified-${event.id}`);
+
         if (
           event.reminder &&
           event.time &&
           event.date === currentDate &&
           event.time === currentTime &&
-          !notifiedIds.includes(event.id)
+          !notified
         ) {
-          setNotifiedIds(previous => [...previous, event.id]);
-          window.alert(`🎀 Pinky Day 行程提醒\n\n${event.title}\n時間：${event.time}`);
+          localStorage.setItem(`pinky-notified-${event.id}`, 'yes');
+          window.alert(
+            `🎀 Pinky Day 行程提醒\n\n${event.title}\n時間：${event.time}`
+          );
         }
       });
     };
@@ -76,7 +80,7 @@ export default function App() {
     const timer = window.setInterval(checkReminders, 10000);
 
     return () => window.clearInterval(timer);
-  }, [events, notifiedIds]);
+  }, [events]);
 
   const days = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
@@ -84,28 +88,75 @@ export default function App() {
   const dateKey = (day: number) =>
     `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
-  const addEvent = () => {
+  const resetForm = () => {
+    setNewTitle('');
+    setNewCategory('生活');
+    setNewTime('09:00');
+    setNewReminder(true);
+    setEditingId(null);
+  };
+
+  const saveEvent = () => {
     if (!newTitle.trim()) {
       window.alert('請先輸入行程名稱喔！');
       return;
     }
 
-    saveEvents([
-      ...events,
-      {
-        id: Date.now(),
-        date: selectedDate,
-        title: newTitle.trim(),
-        category: newCategory,
-        time: newTime,
-        reminder: newReminder,
-      },
-    ]);
+    if (editingId !== null) {
+      const updated = events.map(item =>
+        item.id === editingId
+          ? {
+              ...item,
+              title: newTitle.trim(),
+              date: selectedDate,
+              category: newCategory,
+              time: newTime,
+              reminder: newReminder,
+            }
+          : item
+      );
 
-    setNewTitle('');
-    setNewCategory('生活');
-    setNewTime('09:00');
-    setNewReminder(true);
+      saveEvents(updated);
+    } else {
+      saveEvents([
+        ...events,
+        {
+          id: Date.now(),
+          date: selectedDate,
+          title: newTitle.trim(),
+          category: newCategory,
+          time: newTime,
+          reminder: newReminder,
+        },
+      ]);
+    }
+
+    resetForm();
+  };
+
+  const editEvent = (item: EventItem) => {
+    setEditingId(item.id);
+    setNewTitle(item.title);
+    setNewCategory(item.category || '生活');
+    setNewTime(item.time || '09:00');
+    setNewReminder(item.reminder ?? false);
+    setSelectedDate(item.date);
+
+    const parts = item.date.split('-').map(Number);
+    setYear(parts[0]);
+    setMonth(parts[1] - 1);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const deleteEvent = (id: number) => {
+    saveEvents(events.filter(item => item.id !== id));
+
+    if (editingId === id) {
+      resetForm();
+    }
+
+    localStorage.removeItem(`pinky-notified-${id}`);
   };
 
   const monthChange = (amount: number) => {
@@ -168,7 +219,9 @@ export default function App() {
       </section>
 
       <section className="card">
-        <h2>🌷 {selectedDate} 的行程</h2>
+        <h2>
+          {editingId !== null ? '✏️ 編輯行程' : `🌷 ${selectedDate} 的行程`}
+        </h2>
 
         <div className="add-row">
           <input
@@ -176,8 +229,8 @@ export default function App() {
             onChange={e => setNewTitle(e.target.value)}
             placeholder="今天想安排什麼呢？"
           />
-          <button className="pink-button" onClick={addEvent}>
-            新增
+          <button className="pink-button" onClick={saveEvent}>
+            {editingId !== null ? '儲存修改' : '新增'}
           </button>
         </div>
 
@@ -199,6 +252,15 @@ export default function App() {
 
         <div className="reminder-settings">
           <label className="time-label">
+            <span>📅 行程日期</span>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={e => setSelectedDate(e.target.value)}
+            />
+          </label>
+
+          <label className="time-label">
             <span>🕒 行程時間</span>
             <input
               type="time"
@@ -216,6 +278,16 @@ export default function App() {
             <span>🔔 開啟行程提醒</span>
           </label>
         </div>
+
+        {editingId !== null && (
+          <button
+            className="pink-button"
+            style={{ marginTop: 12, padding: 12 }}
+            onClick={resetForm}
+          >
+            取消編輯
+          </button>
+        )}
 
         {selectedEvents.length === 0 ? (
           <p className="empty">
@@ -238,11 +310,10 @@ export default function App() {
                   </small>
                 </div>
 
-                <button
-                  onClick={() =>
-                    saveEvents(events.filter(e => e.id !== item.id))
-                  }
-                >
+                <button onClick={() => editEvent(item)}>
+                  編輯
+                </button>
+                <button onClick={() => deleteEvent(item.id)}>
                   刪除
                 </button>
               </div>
