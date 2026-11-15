@@ -1,0 +1,10 @@
+{
+  "name": "Pinky Day 粉日常",
+  "short_name": "Pinky Day",
+  "description": "把每一天，過得可愛一點。",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fff7f9",
+  "theme_color": "#f6a9bf",
+  "icons": []
+}
