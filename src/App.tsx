@@ -12,7 +12,6 @@ type EventItem = {
   time?: string;
   reminder?: boolean;
 };
-
 const categories = [
   { name: '生活', icon: '🌸', color: 'life' },
   { name: '工作', icon: '💼', color: 'work' },
