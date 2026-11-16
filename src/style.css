@@ -799,3 +799,145 @@ footer a:hover {
     animation-duration: .01ms !important;
   }
 }
+
+
+/* Theme selector */
+.theme-switch {
+  display: flex;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #f1dce7;
+  border-radius: 999px;
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 3px 10px rgba(190, 131, 158, .08);
+}
+.theme-switch button {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #a78394;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.theme-switch button.selected {
+  background: linear-gradient(135deg, #f9dce9, #eee5ff);
+  color: #a6537b;
+  font-weight: 700;
+}
+
+/* Period days use a tiny flower marker, not a red-filled date */
+.day.period-day:not(.active) {
+  background: transparent;
+}
+.day.period-day.active {
+  background: linear-gradient(145deg, #ffd9e8, #f5b9d2);
+}
+.day .period-mark {
+  position: absolute;
+  bottom: -2px;
+  left: 50%;
+  z-index: 1;
+  display: block;
+  width: auto;
+  height: auto;
+  border-radius: 0;
+  background: transparent;
+  font-size: 10px;
+  font-weight: 400;
+  line-height: 1;
+  transform: translateX(-50%);
+}
+
+/* Minimal style: calm ivory, fine lines, less decoration */
+.app.theme-simple {
+  --simple-ink: #55505a;
+}
+.theme-simple .top {
+  border: 1px solid #eee8ec;
+  border-radius: 18px;
+  background: rgba(255,255,255,.92);
+  box-shadow: 0 4px 16px rgba(70, 55, 70, .045);
+}
+.theme-simple .top h1,
+.theme-simple .card h2,
+.theme-simple .month-bar h2 {
+  color: #6e6370;
+  text-shadow: none;
+}
+.theme-simple .small-title,
+.theme-simple .top p,
+.theme-simple .top small,
+.theme-simple .heart {
+  color: #a69aa6;
+}
+.theme-simple .card {
+  border: 1px solid #eee8ec;
+  border-radius: 18px;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 3px 14px rgba(70, 55, 70, .045);
+  backdrop-filter: none;
+}
+.theme-simple .pink-button {
+  background: #b9a6b6;
+  box-shadow: none;
+}
+.theme-simple .month-bar button {
+  border: 1px solid #eee8ec;
+  background: #f8f6f8;
+  color: #817482;
+  box-shadow: none;
+}
+.theme-simple .day.active {
+  border-color: #d9cbd8;
+  background: #e9e1e9;
+  color: #625665;
+  box-shadow: none;
+}
+.theme-simple .bottom-tabs {
+  border: 1px solid #eee8ec;
+  background: rgba(255,255,255,.96);
+  box-shadow: 0 3px 14px rgba(70, 55, 70, .07);
+  backdrop-filter: none;
+}
+.theme-simple .bottom-tabs button.active {
+  background: #eee8ee;
+  color: #625665;
+  box-shadow: none;
+}
+.theme-simple .theme-switch button.selected {
+  background: #eee8ee;
+  color: #625665;
+}
+.theme-simple .reminder-settings {
+  border-color: #eee8ec;
+  background: #faf8fa;
+}
+.theme-simple .period-prediction {
+  border-color: #eee8ec;
+  background: #f8f5f8;
+  color: #756b78;
+}
+.theme-simple .period-prediction strong,
+.theme-simple .period-record strong {
+  color: #766879;
+}
+.theme-simple .period-chip.selected {
+  border-color: #b9a6b6;
+  background: #eee8ee;
+  color: #625665;
+}
+.theme-simple footer,
+.theme-simple footer a {
+  color: #928794;
+}
+@media (max-width: 430px) {
+  .top {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .theme-switch {
+    margin-left: auto;
+  }
+}
