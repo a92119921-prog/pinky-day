@@ -7,6 +7,7 @@ import MemberCenter from './MemberCenter';
 import PrivacyPolicy from './PrivacyPolicy';
 import Contact from './Contact';
 import About from './About';
+import Guides from './Guides';
 
 type EventItem = {
   id: string;
@@ -338,6 +339,10 @@ export default function App() {
     return <About />;
   }
 
+  if (window.location.pathname.startsWith('/guides')) {
+    return <Guides />;
+  }
+
   // 尚未登入：顯示會員登入頁
   if (authLoading) {
     return (
@@ -426,7 +431,7 @@ export default function App() {
           </button>
         </section>
 
-        <footer>Made with ♡ Pinky Day 粉日常 · <a href="/about">功能介紹</a> · <a href="/privacy">隱私權政策</a> · <a href="/contact">聯絡客服</a></footer>
+        <footer>Made with ♡ Pinky Day 粉日常 · <a href="/about">功能介紹</a> · <a href="/guides">使用指南</a> · <a href="/privacy">隱私權政策</a> · <a href="/contact">聯絡客服</a></footer>
       </main>
     );
   }
