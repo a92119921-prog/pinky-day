@@ -5,6 +5,7 @@ import { supabase } from './supabase';
 import PeriodTracker from './PeriodTracker';
 import MemberCenter from './MemberCenter';
 import PrivacyPolicy from './PrivacyPolicy';
+import Contact from './Contact';
 
 type EventItem = {
   id: string;
@@ -328,6 +329,10 @@ export default function App() {
     return <PrivacyPolicy />;
   }
 
+  if (window.location.pathname === '/contact') {
+    return <Contact />;
+  }
+
   // 尚未登入：顯示會員登入頁
   if (authLoading) {
     return (
@@ -416,7 +421,7 @@ export default function App() {
           </button>
         </section>
 
-        <footer>Made with ♡ Pinky Day 粉日常 · <a href="/privacy">隱私權政策</a></footer>
+        <footer>Made with ♡ Pinky Day 粉日常 · <a href="/privacy">隱私權政策</a> · <a href="/contact">聯絡客服</a></footer>
       </main>
     );
   }
