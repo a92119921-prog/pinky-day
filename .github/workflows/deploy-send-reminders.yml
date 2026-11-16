@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "supabase/functions/send-reminders/**"
-      - ".github/workflows/deploy-send-reminders.yml"
   workflow_dispatch:
 
 jobs:
