@@ -122,7 +122,7 @@ export default function App() {
       if (error) throw error;
 
       setPushEnabled(true);
-      setPushMessage('手機通知已開啟！之後有新提醒時就能透過手機通知你 🎀');
+      setPushMessage('手機通知權限與訂閱已完成，行程自動推播服務仍在設定中，完成後就能收到提醒 🎀');
     } catch (error) {
       console.error('Pinky Day push setup failed:', error);
       setPushMessage(error instanceof Error ? error.message : '開啟通知時發生問題，請稍後再試。');
