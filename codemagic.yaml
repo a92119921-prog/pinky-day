@@ -31,3 +31,44 @@ workflows:
 
     artifacts:
       - android/app/build/outputs/apk/debug/*.apk
+
+  ios-simulator:
+    name: Pinky Day iPhone Simulator Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      node: lts
+      groups:
+        - pinky_day_config
+
+    scripts:
+      - name: Install dependencies
+        script: npm install
+
+      - name: Build Pinky Day website
+        script: npm run build
+
+      - name: Create iOS project
+        script: npx cap add ios
+
+      - name: Sync Capacitor
+        script: npx cap sync ios
+
+      - name: Build iOS Simulator App
+        script: |
+          xcodebuild \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -derivedDataPath "$CM_BUILD_DIR/build/ios" \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Package iOS Simulator App
+        script: |
+          cd "$CM_BUILD_DIR/build/ios/Build/Products/Debug-iphonesimulator"
+          ditto -c -k --sequesterRsrc --keepParent App.app "$CM_BUILD_DIR/PinkyDay-iOS-Simulator.zip"
+
+    artifacts:
+      - PinkyDay-iOS-Simulator.zip
