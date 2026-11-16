@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { FormEvent } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
+import PeriodTracker from './PeriodTracker';
 
 type EventItem = {
   id: string;
@@ -45,6 +46,9 @@ export default function App() {
   const [newTime, setNewTime] = useState('09:00');
   const [newReminder, setNewReminder] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'calendar' | 'period'>('calendar');
+  const [periodDates, setPeriodDates] = useState<string[]>([]);
+  const handlePeriodDatesChange = useCallback((dates: string[]) => setPeriodDates(dates), []);
 
   // 確認目前登入狀態
   useEffect(() => {
@@ -429,6 +433,7 @@ export default function App() {
         {eventsLoading && <p>正在讀取雲端行程……</p>}
       </section>
 
+      {activeTab === 'calendar' && <>
       <section className="calendar card">
         <div className="month-bar">
           <button onClick={() => monthChange(-1)}>‹</button>
@@ -452,15 +457,17 @@ export default function App() {
             const key = dateKey(day);
             const active = selectedDate === key;
             const hasEvent = events.some(item => item.date === key);
+            const hasPeriod = periodDates.includes(key);
 
             return (
               <button
                 key={day}
-                className={active ? 'day active' : 'day'}
+                className={(active ? 'day active' : 'day') + (hasPeriod ? ' period-day' : '')}
                 onClick={() => setSelectedDate(key)}
               >
                 {day}
                 {hasEvent && <i />}
+                {hasPeriod && <b className="period-mark" />}
               </button>
             );
           })}
@@ -612,6 +619,14 @@ export default function App() {
         )}
       </section>
 
+      </>}
+
+      {activeTab === 'period' && <PeriodTracker userId={user.id} onDatesChange={handlePeriodDatesChange} />}
+
+      <nav className="bottom-tabs" aria-label="主要功能">
+        <button type="button" className={activeTab === 'calendar' ? 'active' : ''} onClick={() => setActiveTab('calendar')}>📅 月曆</button>
+        <button type="button" className={activeTab === 'period' ? 'active' : ''} onClick={() => setActiveTab('period')}>🌸 月經紀錄</button>
+      </nav>
       <footer>Made with ♡ Pinky Day 粉日常</footer>
     </main>
   );
