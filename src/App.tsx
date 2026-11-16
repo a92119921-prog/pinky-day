@@ -56,7 +56,7 @@ export default function App() {
   const [pushBusy, setPushBusy] = useState(false);
   const [pushMessage, setPushMessage] = useState('');
   const [pushEnabled, setPushEnabled] = useState(false);
-  const vapidPublicKey = 'BCx3mQeVy9D3K1xjZWn47ZKD_1ni3J2g8Hn3nsh-dPow60gjCcEbGMTRG5Nm0URIPFQD3AM5mjSbsH-xRf0do6Y';
+  const vapidPublicKey = 'BEnIEHyTE2r_zIoLJlnixyh939Ag2LRTT92uRokzBoCixP4dnU4jpHvwvKBtUlgxKHuw9PJ4kACvaQL_NMbJbYs';
 
   const urlBase64ToUint8Array = (value: string) => {
     const padding = '='.repeat((4 - value.length % 4) % 4);
@@ -93,11 +93,23 @@ export default function App() {
 
       const registration = await navigator.serviceWorker.ready;
       let subscription = await registration.pushManager.getSubscription();
+      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+      const currentApplicationServerKey = subscription?.options.applicationServerKey;
+      const keyMatches = Boolean(
+        currentApplicationServerKey &&
+        currentApplicationServerKey.byteLength === applicationServerKey.byteLength &&
+        applicationServerKey.every((byte, index) => byte === new Uint8Array(currentApplicationServerKey)[index])
+      );
+
+      if (subscription && !keyMatches) {
+        await subscription.unsubscribe();
+        subscription = null;
+      }
 
       if (!subscription) {
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+          applicationServerKey,
         });
       }
 
