@@ -53,6 +53,72 @@ export default function App() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'calendar' | 'period' | 'member'>('calendar');
   const [theme, setTheme] = useState<'cute' | 'simple'>(() => (localStorage.getItem('pinky-theme') as 'cute' | 'simple') || 'cute');
+  const [pushBusy, setPushBusy] = useState(false);
+  const [pushMessage, setPushMessage] = useState('');
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const vapidPublicKey = 'BCx3mQeVy9D3K1xjZWn47ZKD_1ni3J2g8Hn3nsh-dPow60gjCcEbGMTRG5Nm0URIPFQD3AM5mjSbsH-xRf0do6Y';
+
+  const urlBase64ToUint8Array = (value: string) => {
+    const padding = '='.repeat((4 - value.length % 4) % 4);
+    const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const raw = window.atob(base64);
+    return Uint8Array.from([...raw].map(char => char.charCodeAt(0)));
+  };
+
+  const enablePushNotifications = async () => {
+    if (!user || pushBusy) return;
+    setPushBusy(true);
+    setPushMessage('');
+
+    try {
+      if (!('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+        setPushMessage('這個瀏覽器目前不支援手機推播，請更新 Safari 或 Chrome。');
+        return;
+      }
+
+      const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      const isInstalled = window.matchMedia('(display-mode: standalone)').matches ||
+        Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
+
+      if (isIOS && !isInstalled) {
+        setPushMessage('iPhone 請先用 Safari 分享按鈕，選擇「加入主畫面」，再從主畫面開啟 Pinky Day。');
+        return;
+      }
+
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        setPushMessage('目前沒有取得通知權限。請到手機設定允許 Pinky Day 傳送通知。');
+        return;
+      }
+
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+        });
+      }
+
+      const { error } = await supabase.from('push_subscriptions').upsert({
+        user_id: user.id,
+        endpoint: subscription.endpoint,
+        subscription: subscription.toJSON(),
+      }, { onConflict: 'endpoint' });
+
+      if (error) throw error;
+
+      setPushEnabled(true);
+      setPushMessage('手機通知已開啟！之後有新提醒時就能透過手機通知你 🎀');
+    } catch (error) {
+      console.error('Pinky Day push setup failed:', error);
+      setPushMessage(error instanceof Error ? error.message : '開啟通知時發生問題，請稍後再試。');
+    } finally {
+      setPushBusy(false);
+    }
+  };
+
 
   useEffect(() => {
     localStorage.setItem('pinky-theme', theme);
@@ -466,6 +532,21 @@ export default function App() {
           登出會員
         </button>
         {eventsLoading && <p>正在讀取雲端行程……</p>}
+      </section>
+
+      <section className="card">
+        <h2>🔔 手機通知</h2>
+        <p>開啟後，Pinky Day 就能將行程提醒傳送到你的手機。</p>
+        <button
+          type="button"
+          className="pink-button"
+          onClick={enablePushNotifications}
+          disabled={pushBusy || pushEnabled}
+          style={{ padding: 12 }}
+        >
+          {pushBusy ? '正在設定通知……' : pushEnabled ? '手機通知已開啟 ✓' : '開啟手機通知'}
+        </button>
+        {pushMessage && <p className="empty" role="status">{pushMessage}</p>}
       </section>
 
       {activeTab === 'calendar' && <>
