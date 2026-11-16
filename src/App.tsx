@@ -374,10 +374,6 @@ export default function App() {
             <button type="button" className={theme === 'simple' ? 'selected' : ''} onClick={() => setTheme('simple')}>簡約風</button>
             <button type="button" className={theme === 'cute' ? 'selected' : ''} onClick={() => setTheme('cute')}>可愛風</button>
           </div>
-          <div className="theme-switch" aria-label="選擇介面風格">
-            <button type="button" className={theme === 'simple' ? 'selected' : ''} onClick={() => setTheme('simple')}>簡約風</button>
-            <button type="button" className={theme === 'cute' ? 'selected' : ''} onClick={() => setTheme('cute')}>可愛風</button>
-          </div>
         </header>
 
         <section className="card">
@@ -459,6 +455,10 @@ export default function App() {
           <small>{user.email}</small>
         </div>
         <span className="heart">♡</span>
+        <div className="theme-switch" aria-label="選擇介面風格">
+          <button type="button" className={theme === 'simple' ? 'selected' : ''} onClick={() => setTheme('simple')}>簡約風</button>
+          <button type="button" className={theme === 'cute' ? 'selected' : ''} onClick={() => setTheme('cute')}>可愛風</button>
+        </div>
       </header>
 
       <section className="card">
