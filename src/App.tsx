@@ -362,7 +362,7 @@ export default function App() {
 
   if (!user) {
     return (
-      <main className="app">
+      <main className={`app theme-${theme}`}>
         <header className="top">
           <div>
             <span className="small-title">MY LITTLE WORLD</span>
@@ -370,6 +370,10 @@ export default function App() {
             <p>把每一天，過成喜歡的樣子。</p>
           </div>
           <span className="heart">♡</span>
+          <div className="theme-switch" aria-label="選擇介面風格">
+            <button type="button" className={theme === 'simple' ? 'selected' : ''} onClick={() => setTheme('simple')}>簡約風</button>
+            <button type="button" className={theme === 'cute' ? 'selected' : ''} onClick={() => setTheme('cute')}>可愛風</button>
+          </div>
           <div className="theme-switch" aria-label="選擇介面風格">
             <button type="button" className={theme === 'simple' ? 'selected' : ''} onClick={() => setTheme('simple')}>簡約風</button>
             <button type="button" className={theme === 'cute' ? 'selected' : ''} onClick={() => setTheme('cute')}>可愛風</button>
@@ -446,7 +450,7 @@ export default function App() {
   }
 
   return (
-    <main className="app">
+    <main className={`app theme-${theme}`}>
       <header className="top">
         <div>
           <span className="small-title">MY LITTLE WORLD</span>
