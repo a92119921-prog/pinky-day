@@ -37,6 +37,12 @@ export default function About() {
       </section>
 
       <section className="card">
+        <h2>📚 免費使用指南</h2>
+        <p>想了解如何安排月曆、使用待辦或記錄週期？</p>
+        <p><a href="/guides">閱讀 Pinky Day 使用指南</a></p>
+      </section>
+
+      <section className="card">
         <h2>需要協助嗎？</h2>
         <p><a href="/contact">聯絡 Pinky Day 客服</a></p>
         <p><a href="/privacy">閱讀隱私權政策</a></p>
