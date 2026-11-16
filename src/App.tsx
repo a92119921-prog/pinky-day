@@ -4,6 +4,7 @@ import type { User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import PeriodTracker from './PeriodTracker';
 import MemberCenter from './MemberCenter';
+import PrivacyPolicy from './PrivacyPolicy';
 
 type EventItem = {
   id: string;
@@ -322,6 +323,11 @@ export default function App() {
     return () => window.clearInterval(timer);
   }, [events, user]);
 
+  // 公開隱私權政策頁，不需要登入
+  if (window.location.pathname === '/privacy') {
+    return <PrivacyPolicy />;
+  }
+
   // 尚未登入：顯示會員登入頁
   if (authLoading) {
     return (
@@ -410,7 +416,7 @@ export default function App() {
           </button>
         </section>
 
-        <footer>Made with ♡ Pinky Day 粉日常</footer>
+        <footer>Made with ♡ Pinky Day 粉日常 · <a href="/privacy">隱私權政策</a></footer>
       </main>
     );
   }
