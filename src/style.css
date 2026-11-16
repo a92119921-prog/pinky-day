@@ -515,3 +515,24 @@ footer {
   color: #b45f81;
   font-weight: bold;
 }
+
+
+/* Pinky Day VIP membership */
+.member-page { display: flex; flex-direction: column; gap: 2px; }
+.member-hero { background: linear-gradient(145deg, #fff5f9, #fff); }
+.member-eyebrow { color: #d18aa5; font-size: 10px; letter-spacing: 2px; }
+.member-hero h2, .member-vip-card h2 { margin: 9px 0; }
+.member-hero p { color: #a98b98; font-size: 13px; }
+.member-status { display: flex; flex-direction: column; gap: 7px; margin-top: 16px; padding: 16px; border: 1px solid #f5dce6; border-radius: 16px; background: #fff7fa; color: #a8798c; }
+.member-status strong { color: #bd7892; font-size: 19px; }
+.member-status.vip { border-color: #e9c98c; background: #fffaf0; }
+.member-status.vip strong { color: #b48a43; }
+.member-status small, .member-note { color: #a98b98; font-size: 12px; line-height: 1.6; }
+.member-benefits { margin: 0; padding-left: 21px; color: #806b75; font-size: 14px; line-height: 2; }
+.member-note { margin-bottom: 0; }
+.member-vip-card { border: 1px solid #f0d4df; background: linear-gradient(145deg, #fff7fa, #fff); }
+.member-price { margin: 14px 0 3px; color: #c86f91; font-size: 30px; font-weight: bold; }
+.member-price small { font-size: 14px; font-weight: normal; }
+.member-year-price { margin: 0 0 14px; color: #a98b98; font-size: 13px; }
+.member-upgrade { width: 100%; margin-top: 16px; padding: 13px; opacity: .75; cursor: not-allowed; }
+.member-message { color: #b96d89; font-size: 12px; overflow-wrap: anywhere; }
