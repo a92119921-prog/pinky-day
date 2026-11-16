@@ -1,4 +1,10 @@
-const articles = {
+type GuideArticleData = {
+  title: string;
+  intro: string;
+  sections: [string, string][];
+};
+
+const articles: Record<string, GuideArticleData> = {
   '/guides/daily-planning': {
     title: 'Pinky Day 新手使用教學：從建立帳號到安排每日行程',
     intro: '第一次使用 Pinky Day，可以先從一件小事開始：把接下來的重要安排放進月曆，再慢慢建立自己的生活整理習慣。',
@@ -39,7 +45,7 @@ const articles = {
   }
 };
 
-function GuideArticle({ article }) {
+function GuideArticle({ article }: { article: GuideArticleData }) {
   return (
     <main className="app">
       <header className="top">
