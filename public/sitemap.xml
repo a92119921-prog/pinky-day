@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://pinky-day.vercel.app/about</loc>
+  </url>
+  <url>
+    <loc>https://pinky-day.vercel.app/guides</loc>
+  </url>
+  <url>
+    <loc>https://pinky-day.vercel.app/guides/daily-planning</loc>
+  </url>
+  <url>
+    <loc>https://pinky-day.vercel.app/guides/calendar-tips</loc>
+  </url>
+  <url>
+    <loc>https://pinky-day.vercel.app/guides/period-tracking</loc>
+  </url>
+  <url>
+    <loc>https://pinky-day.vercel.app/privacy</loc>
+  </url>
+  <url>
+    <loc>https://pinky-day.vercel.app/contact</loc>
+  </url>
+</urlset>
