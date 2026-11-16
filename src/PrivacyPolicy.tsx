@@ -46,7 +46,7 @@ export default function PrivacyPolicy() {
         <p>我們可能因功能、法令或第三方服務調整而更新本政策。更新版本會公布於本頁，並更新最後修改日期。</p>
 
         <h2>九、聯絡方式</h2>
-        <p>如對本政策或個人資料有疑問，請透過 Pinky Day 營運者正式公布的聯絡管道聯繫。網站公開客服聯絡方式尚待補充。</p>
+        <p>如對本政策或個人資料有疑問，請寄信至 <a href="mailto:pinkday.support@gmail.com">pinkday.support@gmail.com</a> 聯絡 Pinky Day 客服。</p>
       </section>
 
       <section className="card">
