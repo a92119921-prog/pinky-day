@@ -1,0 +1,49 @@
+name: Generate Pinky Day app icons
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "public/pinky-day-icon.svg"
+      - ".github/workflows/generate-icons.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Convert SVG to PNG icons
+        run: |
+          pip install cairosvg
+          python - <<'PY'
+          import cairosvg
+          source = "public/pinky-day-icon.svg"
+          outputs = {
+              "public/apple-touch-icon.png": 180,
+              "public/icon-192.png": 192,
+              "public/icon-512.png": 512,
+          }
+          for path, size in outputs.items():
+              cairosvg.svg2png(url=source, write_to=path, output_width=size, output_height=size)
+          PY
+
+      - name: Commit generated icons
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/apple-touch-icon.png public/icon-192.png public/icon-512.png
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Pinky Day app icons"
+            git push
+          fi
