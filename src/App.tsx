@@ -629,7 +629,7 @@ export default function App() {
       <nav className="bottom-tabs" aria-label="主要功能">
         <button type="button" className={activeTab === 'calendar' ? 'active' : ''} onClick={() => setActiveTab('calendar')}>📅 月曆</button>
         <button type="button" className={activeTab === 'period' ? 'active' : ''} onClick={() => setActiveTab('period')}>🌸 月經紀錄</button>
-        <button type="button" className={activeTab === 'member' ? 'active' : ''} onClick={() => setActiveTab('member')}>💎 會員中心</button>
+        <button type="button" className={activeTab === 'member' ? 'active' : ''} onClick={() => setActiveTab('member')}>💗 關於 Pinky Day</button>
       </nav>
       <footer>Made with ♡ Pinky Day 粉日常</footer>
     </main>
