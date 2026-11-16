@@ -85,7 +85,7 @@ export default function PeriodTracker({ userId, onDatesChange }: Props) {
   const prediction = useMemo(() => {
     const starts = [...new Set(records.map(record => record.start_date))].sort();
     if (starts.length < 2) return null;
-    const intervals = starts.slice(1).map((date, index) => dayDiff(starts[index], date));
+    const intervals = starts.slice(1).map((date, index) => dayDiff(starts[index], date))
       .filter(days => days >= 15 && days <= 60)
       .slice(-6);
     if (!intervals.length) return null;
