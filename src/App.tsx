@@ -52,6 +52,11 @@ export default function App() {
   const [newReminder, setNewReminder] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'calendar' | 'period' | 'member'>('calendar');
+  const [theme, setTheme] = useState<'cute' | 'simple'>(() => (localStorage.getItem('pinky-theme') as 'cute' | 'simple') || 'cute');
+
+  useEffect(() => {
+    localStorage.setItem('pinky-theme', theme);
+  }, [theme]);
   const [periodDates, setPeriodDates] = useState<string[]>([]);
   const handlePeriodDatesChange = useCallback((dates: string[]) => setPeriodDates(dates), []);
 
@@ -346,7 +351,7 @@ export default function App() {
   // 尚未登入：顯示會員登入頁
   if (authLoading) {
     return (
-      <main className="app">
+      <main className={`app theme-${theme}`}>
         <section className="card">
           <h1>🎀 Pinky Day</h1>
           <p>正在準備你的小日常……</p>
@@ -365,6 +370,10 @@ export default function App() {
             <p>把每一天，過成喜歡的樣子。</p>
           </div>
           <span className="heart">♡</span>
+          <div className="theme-switch" aria-label="選擇介面風格">
+            <button type="button" className={theme === 'simple' ? 'selected' : ''} onClick={() => setTheme('simple')}>簡約風</button>
+            <button type="button" className={theme === 'cute' ? 'selected' : ''} onClick={() => setTheme('cute')}>可愛風</button>
+          </div>
         </header>
 
         <section className="card">
@@ -489,7 +498,7 @@ export default function App() {
               >
                 {day}
                 {hasEvent && <i />}
-                {hasPeriod && <b className="period-mark" />}
+                {hasPeriod && <b className="period-mark" aria-label="月經紀錄" title="月經紀錄">🌸</b>}
               </button>
             );
           })}
