@@ -122,7 +122,7 @@ export default function App() {
       if (error) throw error;
 
       setPushEnabled(true);
-      setPushMessage('手機通知權限與訂閱已完成，行程自動推播服務仍在設定中，完成後就能收到提醒 🎀');
+      setPushMessage('手機通知已開啟，行程會自動推播給你 🎀');
     } catch (error) {
       console.error('Pinky Day push setup failed:', error);
       setPushMessage(error instanceof Error ? error.message : '開啟通知時發生問題，請稍後再試。');
@@ -156,6 +156,60 @@ export default function App() {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // App 開啟時自動恢復既有的手機推播訂閱，不必每次重新按開啟通知
+  useEffect(() => {
+    if (!user || !('serviceWorker' in navigator) || !('Notification' in window)) {
+      setPushEnabled(false);
+      return;
+    }
+
+    let active = true;
+
+    const restorePushSubscription = async () => {
+      try {
+        if (Notification.permission !== 'granted') {
+          if (active) setPushEnabled(false);
+          return;
+        }
+
+        const registration = await navigator.serviceWorker.ready;
+        const subscription = await registration.pushManager.getSubscription();
+
+        if (!active) return;
+
+        if (!subscription) {
+          setPushEnabled(false);
+          return;
+        }
+
+        const { error } = await supabase.from('push_subscriptions').upsert({
+          user_id: user.id,
+          endpoint: subscription.endpoint,
+          subscription: subscription.toJSON(),
+        }, { onConflict: 'endpoint' });
+
+        if (error) throw error;
+
+        if (active) {
+          setPushEnabled(true);
+          setPushMessage('手機通知已開啟，行程會自動推播給你 🎀');
+        }
+      } catch (error) {
+        console.error('Pinky Day could not restore push subscription:', error);
+        if (active) {
+          setPushEnabled(false);
+          setPushMessage('無法確認手機通知訂閱，請重新開啟通知。');
+        }
+      }
+    };
+
+    restorePushSubscription();
+
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   // 登入後讀取這位會員自己的雲端行程
   useEffect(() => {
