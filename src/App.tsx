@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import type { User } from '@supabase/supabase-js';
 import { supabase } from './supabase';
 import PeriodTracker from './PeriodTracker';
+import MemberCenter from './MemberCenter';
 
 type EventItem = {
   id: string;
@@ -46,7 +47,7 @@ export default function App() {
   const [newTime, setNewTime] = useState('09:00');
   const [newReminder, setNewReminder] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'calendar' | 'period'>('calendar');
+  const [activeTab, setActiveTab] = useState<'calendar' | 'period' | 'member'>('calendar');
   const [periodDates, setPeriodDates] = useState<string[]>([]);
   const handlePeriodDatesChange = useCallback((dates: string[]) => setPeriodDates(dates), []);
 
@@ -623,9 +624,12 @@ export default function App() {
 
       {activeTab === 'period' && <PeriodTracker userId={user.id} onDatesChange={handlePeriodDatesChange} />}
 
+      {activeTab === 'member' && <MemberCenter userId={user.id} />}
+
       <nav className="bottom-tabs" aria-label="主要功能">
         <button type="button" className={activeTab === 'calendar' ? 'active' : ''} onClick={() => setActiveTab('calendar')}>📅 月曆</button>
         <button type="button" className={activeTab === 'period' ? 'active' : ''} onClick={() => setActiveTab('period')}>🌸 月經紀錄</button>
+        <button type="button" className={activeTab === 'member' ? 'active' : ''} onClick={() => setActiveTab('member')}>💎 會員中心</button>
       </nav>
       <footer>Made with ♡ Pinky Day 粉日常</footer>
     </main>
