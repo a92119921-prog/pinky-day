@@ -637,7 +637,7 @@ export default function App() {
         <button type="button" className={activeTab === 'period' ? 'active' : ''} onClick={() => setActiveTab('period')}>🌸 月經紀錄</button>
         <button type="button" className={activeTab === 'member' ? 'active' : ''} onClick={() => setActiveTab('member')}>💗 關於 Pinky Day</button>
       </nav>
-      <footer>Made with ♡ Pinky Day 粉日常</footer>
+      <footer>Made with ♡ Pinky Day 粉日常 · <a href="/privacy">隱私權政策</a></footer>
     </main>
   );
 }
