@@ -536,3 +536,23 @@ footer {
 .member-year-price { margin: 0 0 14px; color: #a98b98; font-size: 13px; }
 .member-upgrade { width: 100%; margin-top: 16px; padding: 13px; opacity: .75; cursor: not-allowed; }
 .member-message { color: #b96d89; font-size: 12px; overflow-wrap: anywhere; }
+
+
+/* Free Pinky Day support options */
+.support-option {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #f7e2e9;
+  border-radius: 14px;
+  background: #fff9fb;
+}
+.support-option strong {
+  color: #bd7892;
+  font-size: 14px;
+}
+.support-option p {
+  margin: 6px 0 0;
+  color: #a98b98;
+  font-size: 13px;
+  line-height: 1.6;
+}
